@@ -1,0 +1,15 @@
+# DSH project auto-memory bundle.
+#
+# Inserts the memory plugin row over the shipped composition. The row name is
+# the package name so the plugin inventory can resolve this package's display
+# metadata (icon and localized title/description); the plugin itself reads only
+# this local package and Node builtins.
+
+- insert:
+    - id: project-memory-plugin
+      name: 'dsh-memory'
+      config:
+        maxIndexLines: 200
+        maxIndexBytes: 20000
+        maxGlobalIndexLines: 40
+        maxGlobalIndexBytes: 4096

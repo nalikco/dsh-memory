@@ -1,0 +1,18 @@
+# Local investigation material and personal migration data. Never publish.
+/reference/
+/mapping.json
+/AGENTS.recovered.md
+/RECHECK.md
+/agents-memory-section.md
+/global-memory-section.md
+
+# Dependencies, credentials, generated artifacts and operating-system files.
+node_modules/
+.env
+.env.*
+*.pem
+*.key
+*.tgz
+coverage/
+.DS_Store
+npm-debug.log*

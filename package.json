@@ -1,0 +1,36 @@
+{
+  "name": "dsh-memory",
+  "version": "1.1.1",
+  "private": true,
+  "description": "Durable project and global memory for DeepSeek Harness, with context injection, revision-guarded tools and history.",
+  "license": "MIT",
+  "author": "Igor Karpliuk",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nalikco/dsh-memory.git"
+  },
+  "homepage": "https://github.com/nalikco/dsh-memory#readme",
+  "bugs": { "url": "https://github.com/nalikco/dsh-memory/issues" },
+  "keywords": ["deepseek-harness", "dsh", "cordis", "memory"],
+  "icon": "./icon.svg",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./icon.svg": "./icon.svg",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.mjs", "plugin.mjs", "store.mjs", "cli.mjs", "migrate.mjs",
+    "recover-lock.mjs", "cordis.patch.yml", "icon.svg", "locale/*.json",
+    "README.md", "LICENSE", "SECURITY.md", "mapping.example.json"
+  ],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "migrate": "node migrate.mjs"
+  },
+  "engines": { "node": ">=22" }
+}

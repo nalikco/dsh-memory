@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Project memory",
+    "description": "Keep durable per-project notes: load the current project's memory into context and give the agent tools to read and update it."
+  }
+}
