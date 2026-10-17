@@ -26,7 +26,8 @@ for (const scope of ['project', 'global']) {
   assert.equal((await tools.get('memory_reindex').execute({ scope, expected_revision: index.revision, entries: [{ file: 'smoke.md', summary: 'Installation check' }], reason: 'Smoke canonical index reset' }, exec)).reindexed, true);
 }
 const pkg = JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8'));
-assert.equal(pkg.version, '1.2.1');
+assert.equal(pkg.version, '1.2.2');
+assert.deepEqual(pkg.engines, { node: '>=22', dsh: '^0.2.0-rc.2' });
 assert.deepEqual([...tools.keys()].sort(), ['memory_forget', 'memory_list', 'memory_projects', 'memory_read', 'memory_reindex', 'memory_restore', 'memory_write']);
 for (const scope of ['project', 'global']) {
   const old = await tools.get('memory_read').execute({ scope, file: 'smoke.md' }, exec);

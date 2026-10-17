@@ -1,11 +1,32 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, readdir, unlink, symlink, link, lstat } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, readdir, unlink, symlink, link, lstat, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { MemoryStore, canonical, digest, MAX_READ_BYTES } from '../store.mjs';
 import { apply } from '../plugin.mjs';
+
+// Case aliases are only representable where two differently cased names map to
+// distinct directory entries. APFS is case-insensitive by default, so a probe
+// write plus a case-flipped lookup detects whether the temp filesystem can hold them.
+async function tmpdirCaseSensitive() {
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-case-probe-'));
+  try {
+    await writeFile(join(dir, 'probe'), '');
+    const probe = await lstat(join(dir, 'probe'));
+    try {
+      const flipped = await lstat(join(dir, 'PROBE'));
+      return !(flipped.dev === probe.dev && flipped.ino === probe.ino);
+    } catch (error) {
+      if (error.code === 'ENOENT') return true;
+      throw error;
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+const CASE_SENSITIVE_TMPDIR = await tmpdirCaseSensitive();
 
 const entry = { file: 'notes.md', summary: 'Reviewed fact' };
 async function fixture() {
@@ -96,7 +117,11 @@ test('reindex revisions bind index, scope, project and filename; unknown scopes 
   await assert.rejects(store.reindex(cwd, args), /STALE_VERSION/);
 });
 
-for (const kind of ['symlink', 'hardlink', 'directory', 'oversize', 'invalidUtf8', 'caseAlias', 'unsupported']) test('reindex refuses unsafe catalog ' + kind, async () => {
+for (const kind of ['symlink', 'hardlink', 'directory', 'oversize', 'invalidUtf8', 'caseAlias', 'unsupported']) test('reindex refuses unsafe catalog ' + kind, async t => {
+  if (kind === 'caseAlias' && !CASE_SENSITIVE_TMPDIR) {
+    t.skip('temp filesystem is case-insensitive: NOTES.md resolves to notes.md, so a case alias cannot be represented');
+    return;
+  }
   const { store, cwd, dir, base } = await populated(); const args = await argsFor(store, cwd);
   const path = join(dir, entry.file);
   if (kind === 'symlink' || kind === 'hardlink') {
@@ -234,12 +259,20 @@ test('reindex selectors reject unknown projects, path/symlink aliases and global
   await assert.rejects(store.reindex(cwd, { ...args, project: other }, undefined, undefined, 'global'), /global scope/);
 });
 
-test('reindex catches same-byte topic replacement by identity and index case aliases', async () => {
+test('reindex catches same-byte topic replacement by identity', async () => {
   const { store, cwd, dir } = await populated(), args = await argsFor(store, cwd);
   const script = "import fs from 'node:fs/promises';import assert from 'node:assert/strict';import {syncBuiltinESMExports} from 'node:module';const original=fs.rename;" +
     'fs.rename=async(a,b)=>{await original(a,b);if(b.includes("/history/")){const p=' + JSON.stringify(join(dir, entry.file)) + ';const bytes=await fs.readFile(p);await fs.rename(p,p+".old");await fs.writeFile(p,bytes);}};syncBuiltinESMExports();' +
     'const {MemoryStore}=await import(' + storeURL + ');await assert.rejects(new MemoryStore(' + JSON.stringify(store.root) + ').reindex(' + JSON.stringify(cwd) + ',' + JSON.stringify(args) + '),/STALE_VERSION/);';
   const child = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8' }); assert.equal(child.status, 0, child.stderr);
+});
+
+test('reindex catches index case aliases', async t => {
+  if (!CASE_SENSITIVE_TMPDIR) {
+    t.skip('temp filesystem is case-insensitive: memory.md resolves to MEMORY.md, so an index case alias cannot be represented');
+    return;
+  }
+  const { store, cwd, dir } = await populated(), args = await argsFor(store, cwd);
   await writeFile(join(dir, 'memory.md'), '# Alias');
   await assert.rejects(store.reindex(cwd, args), /including case|aliases/);
 });

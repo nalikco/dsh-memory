@@ -1,6 +1,6 @@
 {
   "name": "dsh-memory",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "Durable project and global memory for DeepSeek Harness, with context injection, revision-guarded tools and history.",
   "license": "MIT",
@@ -32,5 +32,5 @@
     "test": "node --test test/*.test.mjs",
     "migrate": "node migrate.mjs"
   },
-  "engines": { "node": ">=22" }
+  "engines": { "node": ">=22", "dsh": "^0.2.0-rc.2" }
 }

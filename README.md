@@ -2,12 +2,12 @@
 
 Durable project and global memory for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). A dependency-free Cordis host plugin that injects bounded memory indexes before each model step and exposes revision-guarded read/write tools. No separate model, provider or summarization service is needed.
 
-Version: **1.2.1**. License: [MIT](LICENSE).
+Version: **1.2.2**. License: [MIT](LICENSE).
 
 ## Requirements and installation
 
 - Node.js 22 or newer. macOS and Linux are supported test environments; Windows is not validated.
-- DSH with the `agents`, `systemPrompt`, `tools` and `sandboxPolicy` services and the `system-prompt/assemble` waterfall. The integration was checked against the `0.2.0-rc.2` DSH service packages. These APIs are prerelease and compatibility with other versions is not guaranteed.
+- DSH with the `agents`, `systemPrompt`, `tools` and `sandboxPolicy` services and the `system-prompt/assemble` waterfall. The package declares `engines.dsh: ^0.2.0-rc.2`, accepting the `0.2.0-rc.2` service packages and the `0.2.1-rc.1` desktop app while excluding `0.3.0` prereleases. The integration was checked against the `0.2.0-rc.2` DSH service packages. These APIs are prerelease, so a newer minor version needs a fresh check.
 - Do not activate another plugin registering `memory_projects`, `memory_list`, `memory_read`, `memory_write`, `memory_forget`, `memory_restore` or `memory_reindex` in the same global layer.
 
 In DSH, open **Plugins**, choose bundle installation and enter:
@@ -152,7 +152,7 @@ npm test
 npm pack --dry-run
 ```
 
-No dependency installation is needed for tests. The suite covers scopes, revision guards, project boundaries, policy checks, path/link/file safety, permissions, migration failure injection, lock recovery and bundle packaging. GitHub Actions runs Node.js 22 and 24 on Linux and macOS. The APFS case-alias test skips on case-sensitive filesystems.
+No dependency installation is needed for tests. The suite covers scopes, revision guards, project boundaries, policy checks, path/link/file safety, permissions, migration failure injection, lock recovery and bundle packaging. GitHub Actions runs Node.js 22 and 24 on Linux and macOS. Case-alias checks that a case-insensitive temporary filesystem cannot represent are skipped there with an explicit reason; the same-byte identity-replacement check always runs, and both alias checks run on case-sensitive filesystems.
 
 `index.mjs` is a stable entry shim. It imports fresh implementation modules on activation to work around the Loader's ESM cache. Implementation edits need reactivation; entry-shim or export-map changes can require a DSH restart. Merely refreshing the browser does not reload host code. Repeated activation retains ESM module generations until process exit.
 
@@ -160,6 +160,7 @@ Private migration maps, instruction backups, local investigation reports, refere
 
 ## Changelog
 
+- **1.2.2**: macOS CI repair: the suite probes `os.tmpdir()` case sensitivity and skips only the two case-alias checks a case-insensitive filesystem cannot represent, while the same-byte identity-replacement check runs everywhere; declares `engines.dsh: ^0.2.0-rc.2` for forward compatibility with DSH 0.2.1 prereleases.
 - **1.2.1**: conservative exact-destination unlink regardless of human-readable labels; explicit complete-catalog, revision-guarded canonical index reset with exact old-prose archival and precommit catalog/topic/index race checks; legacy 1.2.0 forget archives remain restorable.
 - **1.2.0**: read-only project discovery, fail-closed registered project selectors, cross-project write policy, revision-required archival forget and guarded exact restore with hash-bound journals and security regressions.
 - **1.1.1**: portable bundle root, strict CLI argument validation, global lock recovery, publication metadata, MIT license, packaging checks and CI.
