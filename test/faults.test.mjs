@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile, readdir, lstat } from 'node:fs/pro
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { MemoryStore, canonical } from '../store.mjs';
+import { MemoryStore, canonical } from '../dist/store.js';
 
 async function fixture() {
   const base = canonical(await mkdtemp(join(tmpdir(), 'dsh-fault-test-')));
@@ -16,9 +16,9 @@ const child = script => {
   const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
 };
-const storeURL = JSON.stringify(new URL('../store.mjs', import.meta.url).href);
-const migrateURL = JSON.stringify(new URL('../migrate.mjs', import.meta.url).href);
-const recoverURL = JSON.stringify(new URL('../recover-lock.mjs', import.meta.url).href);
+const storeURL = JSON.stringify(new URL('../dist/store.js', import.meta.url).href);
+const migrateURL = JSON.stringify(new URL('../dist/migrate.js', import.meta.url).href);
+const recoverURL = JSON.stringify(new URL('../dist/recover-lock.js', import.meta.url).href);
 
 test('failed index replacement leaves a journal with exact recovery bytes and unlocks the store', async () => {
   const { cwd, store } = await fixture(); await store.write(cwd, topic);

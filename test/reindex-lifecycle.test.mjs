@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtemp} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {MemoryStore,canonical} from '../store.mjs';
+import {MemoryStore,canonical} from '../dist/store.js';
 for(const summary of ['Use flags (carefully)','CODEX_HOME & data','[bad](missing.md) <x> `code`','back\\slash _bold_ *star* {curly} !bang |pipe'])test('canonical summary lifecycle: '+summary,async()=>{
  const cwd=canonical(await mkdtemp(join(tmpdir(),'dsh-reindex-cycle-')));const store=new MemoryStore(join(cwd,'memory'));
  await store.write(cwd,{file:'topic.md',content:'# Lesson\n',summary:'original'});

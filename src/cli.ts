@@ -1,6 +1,6 @@
 // Fail closed on typos, repeated flags and missing values before any I/O.
-export function parseArgs(args, { values = [], switches = [] }) {
-  const result = Object.create(null);
+export function parseArgs(args: any, { values = [], switches = [] }: { values?: string[]; switches?: string[] }) {
+  const result: Record<string, any> = Object.create(null);
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
     if (!values.includes(flag) && !switches.includes(flag)) throw new Error(`Unknown argument: ${flag}`);

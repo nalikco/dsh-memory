@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 
 const packageDir = process.argv[2];
 assert.ok(packageDir, 'Pass the installed package directory');
-const { apply } = await import(pathToFileURL(join(packageDir, 'index.mjs')));
+const { apply } = await import(pathToFileURL(join(packageDir, 'dist/index.js')));
 const tools = new Map();
 const base = await realpath(await mkdtemp(join(tmpdir(), 'dsh-packed-smoke-')));
 const cwd = join(base, 'project'); await mkdir(cwd);

@@ -129,11 +129,11 @@ There is **no automatic exact-prose undo** or plain index-write API. For semanti
 A process crash can strand `.write-lock`. First inspect it, then explicitly confirm recovery:
 
 ```sh
-node recover-lock.mjs --cwd /absolute/path/to/project
-node recover-lock.mjs --cwd /absolute/path/to/project --confirm
+node dist/recover-lock.js --cwd /absolute/path/to/project
+node dist/recover-lock.js --cwd /absolute/path/to/project --confirm
 
-node recover-lock.mjs --scope global
-node recover-lock.mjs --scope global --confirm
+node dist/recover-lock.js --scope global
+node dist/recover-lock.js --scope global --confirm
 ```
 
 Add `--root /absolute/path/to/store` for a nondefault store. A live PID, malformed lock or changed lock identity is refused. A PID is only meaningful on the machine and PID namespace that created the lock; do not recover a host lock from a container or a shared-network host. A recovery crash can strand `.lock-recovery`, which also needs manual investigation. Lock removal does not reconcile a partial topic/index commit; inspect journals separately.
@@ -143,8 +143,8 @@ Add `--root /absolute/path/to/store` for a nondefault store. A live PID, malform
 Use a private JSON map from each source project directory name to its verified absolute cwd. Copy [mapping.example.json](mapping.example.json) to an untracked `mapping.json` and replace the example. Do not guess cwd from ambiguous slugs.
 
 ```sh
-node migrate.mjs --map mapping.json
-node migrate.mjs --map mapping.json --apply
+node dist/migrate.js --map mapping.json
+node dist/migrate.js --map mapping.json --apply
 ```
 
 Defaults: source `~/.claude/projects`, destination `~/.dsh/memory`. Override with `--source DIR` and `--destination DIR`. Dry-run is the default. All flags are strictly validated before I/O.
@@ -162,7 +162,7 @@ npm pack --dry-run
 
 No dependency installation is needed for tests. The suite covers scopes, revision guards, project boundaries, policy checks, path/link/file safety, permissions, migration failure injection, lock recovery and bundle packaging. GitHub Actions runs Node.js 22 and 24 on Linux and macOS. Case-alias checks that a case-insensitive temporary filesystem cannot represent are skipped there with an explicit reason; the same-byte identity-replacement check always runs, and both alias checks run on case-sensitive filesystems.
 
-`index.mjs` is a stable entry shim. It imports fresh implementation modules on activation to work around the Loader's ESM cache. Implementation edits need reactivation; entry-shim or export-map changes can require a DSH restart. Merely refreshing the browser does not reload host code. Repeated activation retains ESM module generations until process exit.
+`src/index.ts` (built to `dist/index.js`) is a stable entry shim. It imports fresh implementation modules on activation to work around the Loader's ESM cache. Implementation edits need reactivation; entry-shim or export-map changes can require a DSH restart. Merely refreshing the browser does not reload host code. Repeated activation retains ESM module generations until process exit.
 
 Private migration maps, instruction backups, local investigation reports, reference vendor code and actual memory data do not belong in this repository or its package. Git ignores known local artifacts; the package uses an explicit file allowlist.
 

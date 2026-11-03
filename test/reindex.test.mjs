@@ -4,8 +4,8 @@ import { mkdtemp, mkdir, writeFile, readFile, readdir, unlink, symlink, link, ls
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { MemoryStore, canonical, digest, MAX_READ_BYTES } from '../store.mjs';
-import { apply } from '../plugin.mjs';
+import { MemoryStore, canonical, digest, MAX_READ_BYTES } from '../dist/store.js';
+import { apply } from '../dist/plugin.js';
 
 // Case aliases are only representable where two differently cased names map to
 // distinct directory entries. APFS is case-insensitive by default, so a probe
@@ -176,8 +176,8 @@ test('reindex shares sandbox, plan, cancellation and exact cross-project authori
   f.controller.abort(); await assert.rejects(tool.execute(await argsFor(f.store, f.other), f.exec), /abort/i);
 });
 
-const storeURL = JSON.stringify(new URL('../store.mjs', import.meta.url).href);
-const pluginURL = JSON.stringify(new URL('../plugin.mjs', import.meta.url).href);
+const storeURL = JSON.stringify(new URL('../dist/store.js', import.meta.url).href);
+const pluginURL = JSON.stringify(new URL('../dist/plugin.js', import.meta.url).href);
 for (const race of ['topic', 'add', 'remove', 'index', 'policy', 'plan', 'pending', 'cancel', 'session', 'cwd']) test('reindex rechecks after journal before commit: ' + race, async () => {
   const { store, cwd, dir } = await populated(); const args = await argsFor(store, cwd);
   const before = await readFile(join(dir, 'MEMORY.md'), 'utf8');

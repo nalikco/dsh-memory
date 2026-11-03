@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readdir, readFile, writeFile, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { MemoryStore, canonical, parseScope } from '../store.mjs';
-import { apply } from '../index.mjs';
+import { MemoryStore, canonical, parseScope } from '../dist/store.js';
+import { apply } from '../dist/index.js';
 
 async function fixture() {
   const base = canonical(await mkdtemp(join(tmpdir(), 'dsh-global-test-')));

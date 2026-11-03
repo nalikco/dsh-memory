@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { MemoryStore, canonical } from '../store.mjs';
+import { MemoryStore, canonical } from '../dist/store.js';
 
 const cases = [
   '- [notes.md](<notes.md>): see [other][ref]\n[ref]: other.md\n',

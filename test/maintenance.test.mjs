@@ -4,8 +4,8 @@ import { mkdtemp, mkdir, readFile, writeFile, readdir, symlink, link, unlink, ls
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { MemoryStore, canonical, digest, projectKey } from '../store.mjs';
-import { apply } from '../plugin.mjs';
+import { MemoryStore, canonical, digest, projectKey } from '../dist/store.js';
+import { apply } from '../dist/plugin.js';
 
 const topic = { file: 'notes.md', content: '# Fact\r\n', summary: 'fact' };
 async function fixture() {
@@ -34,7 +34,7 @@ const child = script => {
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
 };
-const storeURL = JSON.stringify(new URL('../store.mjs', import.meta.url).href);
+const storeURL = JSON.stringify(new URL('../dist/store.js', import.meta.url).href);
 
 test('project discovery is read-only and selectors resolve only exact registered identities', async () => {
   const { store, cwd, other, base } = await fixture();

@@ -10,27 +10,53 @@
     "url": "git+https://github.com/nalikco/dsh-memory.git"
   },
   "homepage": "https://github.com/nalikco/dsh-memory#readme",
-  "bugs": { "url": "https://github.com/nalikco/dsh-memory/issues" },
-  "keywords": ["deepseek-harness", "dsh", "cordis", "memory"],
+  "bugs": {
+    "url": "https://github.com/nalikco/dsh-memory/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "memory"
+  ],
   "icon": "./icon.svg",
   "type": "module",
-  "main": "./index.mjs",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./index.mjs",
+    ".": "./dist/index.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json",
     "./icon.svg": "./icon.svg",
     "./locale/*.json": "./locale/*.json"
   },
   "files": [
-    "index.mjs", "plugin.mjs", "store.mjs", "cli.mjs", "migrate.mjs",
-    "recover-lock.mjs", "cordis.patch.yml", "icon.svg", "locale/*.json",
-    "README.md", "LICENSE", "SECURITY.md", "mapping.example.json"
+    "dist",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale/*.json",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "mapping.example.json"
   ],
-  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
-  "scripts": {
-    "test": "node --test test/*.test.mjs",
-    "migrate": "node migrate.mjs"
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
   },
-  "engines": { "node": ">=22", "dsh": "^0.2.0-rc.2" }
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "migrate": "node dist/migrate.js",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": "^0.2.0-rc.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "~5.9.3"
+  }
 }

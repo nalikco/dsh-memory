@@ -3,10 +3,10 @@ import { randomUUID } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
-import { parseArgs } from './cli.mjs';
-import { MemoryStore, canonical, digest, noSymlinks, atomicWrite, exclusive, below, validateTopic, readBytes, projectKey, decodeUtf8 } from './store.mjs';
+import { parseArgs } from './cli.js';
+import { MemoryStore, canonical, digest, noSymlinks, atomicWrite, exclusive, below, validateTopic, readBytes, projectKey, decodeUtf8 } from './store.js';
 
-async function walk(dir, prefix = '') {
+async function walk(dir: any, prefix = ''): Promise<any[]> {
   const files = [];
   await noSymlinks(dir);
   for (const e of await readdir(dir, { withFileTypes: true })) {
@@ -18,10 +18,10 @@ async function walk(dir, prefix = '') {
   }
   return files.sort();
 }
-async function existing(path) {
+async function existing(path: any) {
   try { return await readBytes(path); } catch (e) { if (e.code === 'ENOENT') return null; throw e; }
 }
-async function assertNoCaseAliases(dir, files) {
+async function assertNoCaseAliases(dir: any, files: any) {
   await noSymlinks(dir);
   let names;
   try { names = await readdir(dir); } catch (e) { if (e.code === 'ENOENT') return; throw e; }
@@ -30,7 +30,7 @@ async function assertNoCaseAliases(dir, files) {
       throw new Error(`Case-colliding destination topic: ${file}`);
   }
 }
-export async function migrate({ source = join(homedir(), '.claude', 'projects'), destination, mapping, apply = false }) {
+export async function migrate({ source = join(homedir(), '.claude', 'projects'), destination, mapping, apply = false }: { source?: string; destination?: string; mapping?: any; apply?: boolean }) {
   const store = new MemoryStore(destination);
   await noSymlinks(source);
   await noSymlinks(store.root);
@@ -73,7 +73,7 @@ export async function migrate({ source = join(homedir(), '.claude', 'projects'),
     }
     plans.push({ slug: entry.name, source: dir, project, records });
   }
-  const result = { applied: apply, projects: plans.length, files: plans.reduce((n, p) => n + p.records.length, 0), bytes: plans.reduce((n, p) => n + p.records.reduce((k, r) => k + r.bytes, 0), 0), entries: [] };
+  const result = { applied: apply, projects: plans.length, files: plans.reduce((n, p) => n + p.records.length, 0), bytes: plans.reduce((n, p) => n + p.records.reduce((k, r) => k + r.bytes, 0), 0), entries: [] as any[] };
   for (const plan of plans) {
     if (apply) await exclusive(plan.project.dir, async () => {
       await assertNoCaseAliases(plan.project.dir, plan.records.map(record => record.file));
@@ -112,7 +112,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     values: ['--map', '--source', '--destination'], switches: ['--apply']
   });
   const mapPath = args['--map'];
-  if (!mapPath) throw new Error('Usage: node migrate.mjs --map mapping.json [--source DIR] [--destination DIR] [--apply]. Default is dry-run.');
+  if (!mapPath) throw new Error('Usage: node dist/migrate.js --map mapping.json [--source DIR] [--destination DIR] [--apply]. Default is dry-run.');
   const mapping = JSON.parse(await readFile(mapPath, 'utf8'));
   console.log(JSON.stringify(await migrate({ mapping, source: args['--source'], destination: args['--destination'], apply: args['--apply'] === true }), null, 2));
 }

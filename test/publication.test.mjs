@@ -4,10 +4,10 @@ import { mkdtemp, mkdir, writeFile, readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { MemoryStore, canonical } from '../store.mjs';
-import { migrate } from '../migrate.mjs';
-import { recoverLock } from '../recover-lock.mjs';
-import { parseArgs } from '../cli.mjs';
+import { MemoryStore, canonical } from '../dist/store.js';
+import { migrate } from '../dist/migrate.js';
+import { recoverLock } from '../dist/recover-lock.js';
+import { parseArgs } from '../dist/cli.js';
 
 async function fixture() {
   const base = canonical(await mkdtemp(join(tmpdir(), 'dsh-publication-test-')));
@@ -27,9 +27,9 @@ test('CLI rejects unknown, duplicate and missing-value flags', () => {
 test('CLI invalid arguments fail before touching the requested store', async () => {
   const { cwd, store } = await fixture();
   for (const [script, args] of [
-    ['recover-lock.mjs', ['--cwd', cwd, '--confirm', '--root']],
-    ['recover-lock.mjs', ['--scope', 'global', '--root', '--confirm']],
-    ['migrate.mjs', ['--map', 'missing.json', '--destination', '--apply']]
+    ['dist/recover-lock.js', ['--cwd', cwd, '--confirm', '--root']],
+    ['dist/recover-lock.js', ['--scope', 'global', '--root', '--confirm']],
+    ['dist/migrate.js', ['--map', 'missing.json', '--destination', '--apply']]
   ]) {
     const result = spawnSync(process.execPath, [new URL(`../${script}`, import.meta.url).pathname, ...args], { encoding: 'utf8' });
     assert.notEqual(result.status, 0);
@@ -58,7 +58,7 @@ test('recovery CLI supports global scope without cwd', async () => {
   await store.write(null, topic(), undefined, undefined, 'global');
   const lock = join(store.global().dir, '.write-lock');
   await writeFile(lock, JSON.stringify({ pid: 2147483647 }));
-  const run = (...flags) => spawnSync(process.execPath, [new URL('../recover-lock.mjs', import.meta.url).pathname, '--scope', 'global', '--root', store.root, ...flags], { encoding: 'utf8' });
+  const run = (...flags) => spawnSync(process.execPath, [new URL('../dist/recover-lock.js', import.meta.url).pathname, '--scope', 'global', '--root', store.root, ...flags], { encoding: 'utf8' });
   const dry = run(); assert.equal(dry.status, 0, dry.stderr); assert.equal(JSON.parse(dry.stdout).removed, false);
   const confirmed = run('--confirm'); assert.equal(confirmed.status, 0, confirmed.stderr); assert.equal(JSON.parse(confirmed.stdout).removed, true);
 });
@@ -78,7 +78,7 @@ test('migration CLI uses parsed paths and defaults to dry-run', async () => {
   const source = join(base, 'source'); const dir = join(source, 'slug', 'memory');
   await mkdir(dir, { recursive: true }); await writeFile(join(dir, 'notes.md'), '# Fact\n');
   const mapping = join(base, 'map.json'); await writeFile(mapping, JSON.stringify({ slug: cwd }));
-  const run = (...flags) => spawnSync(process.execPath, [new URL('../migrate.mjs', import.meta.url).pathname, '--map', mapping, '--source', source, '--destination', store.root, ...flags], { encoding: 'utf8' });
+  const run = (...flags) => spawnSync(process.execPath, [new URL('../dist/migrate.js', import.meta.url).pathname, '--map', mapping, '--source', source, '--destination', store.root, ...flags], { encoding: 'utf8' });
   const dry = run(); assert.equal(dry.status, 0, dry.stderr); assert.equal(JSON.parse(dry.stdout).applied, false);
   assert.equal((await store.read(cwd, 'notes.md')).content, null);
   const applied = run('--apply'); assert.equal(applied.status, 0, applied.stderr);
@@ -125,9 +125,9 @@ test('bundle and package metadata are portable and exclude local artifacts', asy
   assert.equal(pkg.license, 'MIT');
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml');
   assert.ok(!patch.includes('/Users/') && !patch.includes('/home/'));
-  assert.ok(pkg.files.includes('store.mjs') && pkg.files.includes('cli.mjs'));
+  assert.ok(pkg.files.includes('dist'));
   for (const path of ['mapping.json', 'AGENTS.recovered.md', 'reference', 'RECHECK.md']) assert.ok(!pkg.files.includes(path));
   assert.equal(pkg.scripts.prepare, undefined); assert.equal(pkg.scripts.postinstall, undefined);
-  for (const file of ['index.mjs', 'plugin.mjs', 'store.mjs', 'cli.mjs', 'migrate.mjs', 'recover-lock.mjs', 'LICENSE', 'SECURITY.md', 'locale/en.json', 'locale/zh.json'])
+  for (const file of ['dist/index.js', 'dist/plugin.js', 'dist/store.js', 'dist/cli.js', 'dist/migrate.js', 'dist/recover-lock.js', 'LICENSE', 'SECURITY.md', 'locale/en.json', 'locale/zh.json'])
     assert.ok((await readFile(new URL(`../${file}`, import.meta.url))).length > 0);
 });

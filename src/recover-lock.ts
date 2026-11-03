@@ -1,10 +1,10 @@
 import { open, lstat, unlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { parseArgs } from './cli.mjs';
-import { MemoryStore, readBytes, noSymlinks } from './store.mjs';
+import { parseArgs } from './cli.js';
+import { MemoryStore, readBytes, noSymlinks } from './store.js';
 
-export async function recoverLock({ cwd, root, scope = 'project', confirm = false }) {
+export async function recoverLock({ cwd, root, scope = 'project', confirm = false }: { cwd?: string; root?: string; scope?: string; confirm?: boolean }) {
   const store = new MemoryStore(root);
   const project = await store.target(scope, cwd);
   const lock = join(project.dir, '.write-lock');
@@ -38,6 +38,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     values: ['--cwd', '--root', '--scope'], switches: ['--confirm']
   });
   if (!args['--cwd'] && args['--scope'] !== 'global')
-    throw new Error('Usage: node recover-lock.mjs --cwd /absolute/project [--scope project] [--root DIR] [--confirm], or --scope global. Default is read-only inspection.');
+    throw new Error('Usage: node dist/recover-lock.js --cwd /absolute/project [--scope project] [--root DIR] [--confirm], or --scope global. Default is read-only inspection.');
   console.log(JSON.stringify(await recoverLock({ cwd: args['--cwd'], root: args['--root'], scope: args['--scope'], confirm: args['--confirm'] === true }), null, 2));
 }

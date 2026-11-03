@@ -1,64 +1,64 @@
-// Implementation module. Imported by index.mjs with a cache-busting query.
-const string = description => ({ type: 'string', description });
+// Implementation module. Imported by index.js with a cache-busting query.
+const string = (description: any) => ({ type: 'string', description });
 const scopeParameter = {
   type: 'string',
-  enum: ['project', 'global'],
+  enum: ['project', 'global'] as string[],
   description: 'Which memory scope: "project" (default, tied to the current working directory) or "global" (shared across every project).'
 };
 const projectParameter = string('Exact absolute registered project cwd from memory_projects. Not a directory/store path or alias. Project scope only; omit for current project.');
-const object = (properties, required = []) => ({ type: 'object', properties, required, additionalProperties: false });
+const object = (properties: any, required: string[] = []) => ({ type: 'object', properties, required, additionalProperties: false });
 const output = {
   schema: { type: 'object', additionalProperties: true },
-  render: (_args, value) => [{ type: 'text', text: JSON.stringify(value, null, 2) }]
+  render: (_args: any, value: any) => [{ type: 'text', text: JSON.stringify(value, null, 2) }]
 };
-const budget = (value, min, max, label) => {
+const budget = (value: any, min: any, max: any, label: any) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`Invalid project memory ${label} budget`);
   return value;
 };
 
-export function apply(ctx, config = {}, { MemoryStore, DEFAULT_ROOT }) {
+export function apply(ctx: any, config: Record<string, any> = {}, { MemoryStore, DEFAULT_ROOT }: typeof import('./store.js')) {
   const store = new MemoryStore(config.root ?? DEFAULT_ROOT);
   const maxLines = budget(config.maxIndexLines ?? 200, 1, 2000, 'index line');
   const maxBytes = budget(config.maxIndexBytes ?? 20000, 100, 100000, 'index byte');
   const maxGlobalLines = budget(config.maxGlobalIndexLines ?? 40, 1, 2000, 'global index line');
   const maxGlobalBytes = budget(config.maxGlobalIndexBytes ?? 4096, 100, 100000, 'global index byte');
-  const agentOf = exec => {
+  const agentOf = (exec: any) => {
     const agent = exec.agent && ctx.agents.get(exec.agent.id);
     if (!agent?.session) throw new Error('Project memory requires a live agent');
     return agent;
   };
-  ctx.on('system-prompt/assemble', async (assembly, context, next) => {
+  ctx.on('system-prompt/assemble', async (assembly: any, context: any, next: any) => {
     const result = await next();
-    const agent = ctx.agents.list().find(a => a === context.scope);
+    const agent = ctx.agents.list().find((a: any) => a === context.scope);
     if (!agent?.session) return result;
     context.signal?.throwIfAborted();
     const text = await store.context(agent.session.header?.cwd, { maxLines, maxBytes }, { maxLines: maxGlobalLines, maxBytes: maxGlobalBytes });
-    return { ...result, contexts: [...result.contexts.filter(c => c.name !== 'project-memory'), { name: 'project-memory', text }] };
+    return { ...result, contexts: [...result.contexts.filter((c: any) => c.name !== 'project-memory'), { name: 'project-memory', text }] };
   });
   ctx.tools.register({
     name: 'memory_projects', description: 'Read-only discovery of registered project memory identities. Returns exact absolute cwd selectors; does not register projects or create stores.',
     parameters: object({}), output, isConcurrencySafe: () => true,
-    execute: async (_args, exec) => {
+    execute: async (_args: any, exec: any) => {
       exec.signal.throwIfAborted(); agentOf(exec);
-      const projects = (await store.projects()).map(p => ({ cwd: p.cwd, directory: p.dir }));
+      const projects = (await store.projects()).map((p: any) => ({ cwd: p.cwd, directory: p.dir }));
       exec.signal.throwIfAborted(); return { projects };
     }
   });
   ctx.tools.register({
     name: 'memory_list', description: 'List Markdown topics in persistent memory. Scope "project" defaults to the current project; optional project selects an exact registered cwd; scope "global" is shared across every project. Read-only.',
     parameters: object({ scope: scopeParameter, project: projectParameter }), output, isConcurrencySafe: () => true,
-    execute: async (args, exec) => { exec.signal.throwIfAborted(); return store.list(agentOf(exec).session.header?.cwd, args.scope, args.project); }
+    execute: async (args: any, exec: any) => { exec.signal.throwIfAborted(); return store.list(agentOf(exec).session.header?.cwd, args.scope, args.project); }
   });
   ctx.tools.register({
     name: 'memory_read', description: 'Read a complete memory topic or MEMORY.md and get the revision required for updates. Read matching topics before relying on the index. Scope "project" defaults to the current working directory; optional project selects a registered cwd; scope "global" is shared across every project.',
     parameters: object({ file: string('Plain Markdown filename; defaults to MEMORY.md.'), scope: scopeParameter, project: projectParameter }), output, isConcurrencySafe: () => true,
-    execute: async (args, exec) => { exec.signal.throwIfAborted(); return store.read(agentOf(exec).session.header?.cwd, args.file ?? 'MEMORY.md', args.scope, args.project); }
+    execute: async (args: any, exec: any) => { exec.signal.throwIfAborted(); return store.read(agentOf(exec).session.header?.cwd, args.file ?? 'MEMORY.md', args.scope, args.project); }
   });
   ctx.tools.register({
     name: 'memory_write', description: 'Save selective cross-session knowledge, not a work log, and update its index. Use only for reusable preferences/corrections, non-obvious constraints/rationale or external references not already recoverable from code, Git or instructions. Most tasks need no write; update an existing subject, never create checkpoint/push/test/deploy diaries. Scope "project" (default) writes memory for the current working directory; scope "global" writes facts shared across every project, such as preferences, environment and cross-project conventions. Explicit persistence outside the workspace. Existing topics require the memory_read revision; history is retained. Disabled in read-only or plan mode. Optional project selects an exact registered cwd; cross-project writes require danger-full-access. Never store credentials, guesses or temporary progress.',
     parameters: object({ file: string('Plain topic filename, not MEMORY.md.'), content: string('Complete Markdown topic content.'), summary: string('Single-line index description, at most 300 characters.'), expected_revision: string('Revision returned by memory_read. Required for updating an existing topic; recommended for creating after reading.'), scope: scopeParameter, project: projectParameter }, ['file', 'content', 'summary']),
     output,
-    execute: (args, exec) => mutate('write', args, exec)
+    execute: (args: any, exec: any) => mutate('write', args, exec)
   });
   ctx.tools.register({
     name: 'memory_reindex',
@@ -68,7 +68,7 @@ export function apply(ctx, config = {}, { MemoryStore, DEFAULT_ROOT }) {
       reason: string('Explicit index reset reason; nonempty single line, at most 300 characters, without control characters.'),
       scope: scopeParameter, project: projectParameter
     }, ['entries', 'expected_revision', 'reason']),
-    output, execute: (args, exec) => mutate('reindex', args, exec)
+    output, execute: (args: any, exec: any) => mutate('reindex', args, exec)
   });
   for (const operation of ['forget', 'restore']) {
     ctx.tools.register({
@@ -82,15 +82,15 @@ export function apply(ctx, config = {}, { MemoryStore, DEFAULT_ROOT }) {
         ...(operation === 'restore' ? { archive_id: string('Opaque archive_id returned by memory_forget; never a path.') } : {}),
         scope: scopeParameter, project: projectParameter
       }, ['file', 'expected_revision', 'reason', ...(operation === 'restore' ? ['archive_id'] : [])]),
-      output, execute: (args, exec) => mutate(operation, args, exec)
+      output, execute: (args: any, exec: any) => mutate(operation, args, exec)
     });
   }
-  async function mutate(operation, args, exec) {
+  async function mutate(operation: any, args: any, exec: any) {
     const agent = agentOf(exec);
     const session = agent.session;
     const cwd = session.header?.cwd;
     let crossProject = args.project !== undefined; // Fail closed before async resolution.
-    const assertWritable = (target, current) => {
+    const assertWritable = (target?: any, current?: any) => {
       if (target && args.project !== undefined) crossProject = !current || target.cwd !== current.cwd;
       exec.signal.throwIfAborted();
       if (agentOf(exec) !== agent || agent.session !== session || session.header?.cwd !== cwd) throw new Error('Memory session identity changed');
@@ -110,6 +110,6 @@ export function apply(ctx, config = {}, { MemoryStore, DEFAULT_ROOT }) {
       crossProject = !current || selected.cwd !== current.cwd;
     } else crossProject = false;
     assertWritable();
-    return store[operation](cwd, args, exec.signal, assertWritable, args.scope);
+    return (store as any)[operation](cwd, args, exec.signal, assertWritable, args.scope);
   }
 }

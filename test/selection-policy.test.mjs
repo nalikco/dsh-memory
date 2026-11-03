@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {mkdtemp, readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {MemoryStore,canonical} from '../store.mjs';
-import {apply} from '../plugin.mjs';
+import {MemoryStore,canonical} from '../dist/store.js';
+import {apply} from '../dist/plugin.js';
 
 test('context promotes selective memory and explicitly rejects work diaries',async()=>{
  const base=canonical(await mkdtemp(join(tmpdir(),'dsh-selective-')));const store=new MemoryStore(join(base,'memory'));

@@ -4,10 +4,10 @@ import { mkdtemp, mkdir, writeFile, readFile, link, symlink, readdir, lstat } fr
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { MemoryStore, canonical, projectKey, MAX_READ_BYTES } from '../store.mjs';
-import { migrate } from '../migrate.mjs';
-import { recoverLock } from '../recover-lock.mjs';
-import { apply } from '../index.mjs';
+import { MemoryStore, canonical, projectKey, MAX_READ_BYTES } from '../dist/store.js';
+import { migrate } from '../dist/migrate.js';
+import { recoverLock } from '../dist/recover-lock.js';
+import { apply } from '../dist/index.js';
 
 async function fixture() {
   const base = canonical(await mkdtemp(join(tmpdir(), 'dsh-audit-test-')));
@@ -160,7 +160,7 @@ test('migration staging failure never publishes partial final topic and permits 
   const opts = { source, destination: store.root, mapping: { slug: cwd }, apply: true };
   const script = `import fs from 'node:fs/promises'; import {syncBuiltinESMExports} from 'node:module';
     const original=fs.open; fs.open=async(...args)=>{const h=await original(...args);if(String(args[0]).includes('/.import-')){h.writeFile=async bytes=>{await h.write(bytes.subarray(0,5));throw Object.assign(new Error('Injected'),{code:'EIO'});};}return h;};syncBuiltinESMExports();
-    const {migrate}=await import(${JSON.stringify(new URL('../migrate.mjs', import.meta.url).href)});try{await migrate(${JSON.stringify(opts)});process.exit(9);}catch(e){if(e.code!=='EIO')throw e;}`;
+    const {migrate}=await import(${JSON.stringify(new URL('../dist/migrate.js', import.meta.url).href)});try{await migrate(${JSON.stringify(opts)});process.exit(9);}catch(e){if(e.code!=='EIO')throw e;}`;
   const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8' }); assert.equal(result.status, 0, result.stderr);
   const target = join(store.root, 'projects', projectKey(cwd), 'notes.md'); await assert.rejects(readFile(target), { code: 'ENOENT' });
   assert.equal((await migrate(opts)).files, 1);
