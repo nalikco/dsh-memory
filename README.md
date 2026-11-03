@@ -22,6 +22,14 @@ The package declares its bundle patch, icon and localized metadata. No build ste
 
 The default memory root is `~/.dsh/memory` for the user running DSH. There are no machine-specific paths in the bundle. Installation does not import existing notes or change global instructions.
 
+## Localization
+
+Plugin Manager metadata is available in English, Chinese and Russian through the
+exported `locale/*.json` resources. DSH 0.2.2 includes Russian (`ru`) in Settings →
+General; this Host-only plugin does not register a language or Client UI dictionary.
+Model-facing tool descriptions and injected memory guidance remain in English.
+Memory content is preserved verbatim in its original language.
+
 ## Scopes and tools
 
 | Tool | Behavior |
